@@ -292,8 +292,8 @@ TEST(CapabilityGraphTest, SynthesizesCudaStagesForMnnvlHostTransfer) {
     ASSERT_TRUE(path.found);
     EXPECT_FALSE(path.direct);
     EXPECT_EQ(path.cross_transport, MNNVL);
-    EXPECT_TRUE(path.local_stage_location == "cuda:0" ||
-                path.remote_stage_location == "cuda:1");
+    EXPECT_EQ(path.local_stage_location, "cuda:0");
+    EXPECT_EQ(path.remote_stage_location, "cuda:1");
 }
 
 TEST(CapabilityGraphTest, ReportsNoFeasiblePathWithoutLocalExecutors) {
