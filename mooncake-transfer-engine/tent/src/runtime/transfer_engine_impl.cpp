@@ -1957,6 +1957,9 @@ Status TransferEngineImpl::enqueuePreparedSubmit(Batch* batch,
         queued.batch = batch;
         queued.owner_task_id = prepared.owners[i].owner_task_id;
         queued.byte_charge = prepared.owners[i].request.length;
+        queued.route = prepared.owners[i].route;
+        queued.staging = prepared.owners[i].staging;
+        queued.staging_params = prepared.owners[i].staging_params;
         queued.public_task_ids.push_back(prepared.owners[i].owner_task_id);
         queued.public_task_ids.insert(
             queued.public_task_ids.end(),
@@ -2044,23 +2047,22 @@ Status TransferEngineImpl::dispatchQueuedOwner(QueueOwnerId owner_id) {
     auto* batch = queued.batch;
     auto& task = batch->task_list[queued.owner_task_id];
     task.dispatch_time = std::chrono::steady_clock::now();
-    auto resolved = resolveExecutionRoute(task.request, 0);
-    task.type = resolved.route.transport;
-    task.device_mask = resolved.route.device_mask;
+    task.type = queued.route.transport;
+    task.device_mask = queued.route.device_mask;
     task.qp_pool.clear();
-    if (resolved.route.qp_pool) task.qp_pool = *resolved.route.qp_pool;
+    if (queued.route.qp_pool) task.qp_pool = *queued.route.qp_pool;
     if (task.type == UNSPEC) {
         return finishQueuedOwner(owner_id, FAILED);
     }
 
     task.staging = false;
-    if (resolved.staging) {
+    if (queued.staging) {
         task.staging = true;
         // Orchestration only; the real transport submissions issued by
         // ProxyManager are counted where they recurse through the
         // non-staging path below.
         auto status = staging_proxy_->submit(&task, (BatchID)batch,
-                                             resolved.staging_params);
+                                             queued.staging_params);
         if (!status.ok()) return finishQueuedOwner(owner_id, FAILED);
         task.post_time = std::chrono::steady_clock::now();
         return markQueuedOwnerSubmitted(owner_id);

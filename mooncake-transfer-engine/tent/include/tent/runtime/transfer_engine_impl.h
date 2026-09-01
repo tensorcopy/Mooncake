@@ -478,6 +478,9 @@ class TransferEngineImpl {
         size_t owner_task_id{0};
         std::vector<size_t> public_task_ids;
         size_t byte_charge{0};
+        SelectionResult route{};
+        bool staging{false};
+        std::vector<std::string> staging_params;
         bool in_dispatch_window{false};
     };
 
