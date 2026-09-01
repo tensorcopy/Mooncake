@@ -2047,6 +2047,7 @@ Status TransferEngineImpl::dispatchQueuedOwner(QueueOwnerId owner_id) {
     auto resolved = resolveExecutionRoute(task.request, 0);
     task.type = resolved.route.transport;
     task.device_mask = resolved.route.device_mask;
+    task.qp_pool.clear();
     if (resolved.route.qp_pool) task.qp_pool = *resolved.route.qp_pool;
     if (task.type == UNSPEC) {
         return finishQueuedOwner(owner_id, FAILED);
